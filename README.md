@@ -6,10 +6,10 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 
 ```mermaid
 graph TD
-    A[dart_node_core] --> B[dart_node_express]
-    A --> C[dart_node_node]
-    A --> D[dart_node_react]
-    D --> E[dart_node_react_native]
+    B[dart_node_express] --> A[dart_node_core]
+    C[dart_node_node] --> A
+    D[dart_node_react] --> A
+    E[dart_node_react_native] --> D
     B -.-> F[express npm]
     D -.-> G[react npm]
     E -.-> H[react-native npm]

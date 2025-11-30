@@ -1,7 +1,7 @@
 name: dart_node_react
 description: React bindings for Dart
 version: 0.1.0-beta
-repository: https://github.com/user/dart_node
+repository: https://github.com/MelbourneDeveloper/dart_node
 
 environment:
   sdk: ^3.10.0
