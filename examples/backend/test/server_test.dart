@@ -51,11 +51,13 @@ void main() {
 
   group('Auth endpoints', () {
     test('POST /auth/register creates user and returns token', () async {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final email = 'register_$timestamp@test.com';
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'email': 'test@example.com',
+          'email': email,
           'password': 'password123',
           'name': 'Test User',
         }),
@@ -66,7 +68,7 @@ void main() {
       expect(body['success'], isTrue);
       final data = body['data'] as Map<String, dynamic>;
       final user = data['user'] as Map<String, dynamic>;
-      expect(user['email'], equals('test@example.com'));
+      expect(user['email'], equals(email));
       expect(data['token'], isNotNull);
     });
 
