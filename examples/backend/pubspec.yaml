@@ -12,6 +12,8 @@ dependencies:
     path: ../../packages/dart_node_core
   dart_node_express:
     path: ../../packages/dart_node_express
+  dart_node_ws:
+    path: ../../packages/dart_node_ws
   shared:
     path: ../shared
 

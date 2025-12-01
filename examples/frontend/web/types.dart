@@ -3,6 +3,9 @@ import 'dart:js_interop';
 /// API configuration
 const apiUrl = 'http://localhost:3000';
 
+/// WebSocket URL
+const wsUrl = 'ws://localhost:3001';
+
 /// Auth state - immutable record
 typedef AuthState = ({JSString? token, JSObject? user, String view});
 

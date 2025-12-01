@@ -195,7 +195,7 @@ abstract final class AppStyles {
   };
 
   static const Map<String, dynamic> deleteBtnText = {
-    'color': AppColors.textMuted,
+    'color': AppColors.danger,
     'fontSize': AppTypography.sizeXl,
   };
 
@@ -429,5 +429,77 @@ abstract final class AppStyles {
     'borderColor': AppColors.borderRN,
     'borderRadius': AppSpacing.radiusMd,
     'color': AppColors.textPrimary,
+  };
+
+  // FAB (Floating Action Button)
+  static const Map<String, dynamic> fab = {
+    'position': 'absolute',
+    'bottom': 24,
+    'right': 24,
+    'width': 56,
+    'height': 56,
+    'borderRadius': 28,
+    'backgroundColor': AppColors.accentPrimary,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'elevation': 4,
+    'shadowColor': '#000',
+    'shadowOffset': {'width': 0, 'height': 2},
+    'shadowOpacity': 0.25,
+    'shadowRadius': 4,
+  };
+
+  static const Map<String, dynamic> fabText = {
+    'color': AppColors.textPrimary,
+    'fontSize': 28,
+    'fontWeight': AppTypography.weightBold,
+  };
+
+  // Add task inline form
+  static const Map<String, dynamic> addTaskInline = {
+    'flexDirection': 'row',
+    'alignItems': 'center',
+    'backgroundColor': AppColors.bgCard,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
+    'borderRadius': AppSpacing.radiusMd,
+    'padding': AppSpacing.md,
+    'marginBottom': AppSpacing.md,
+    'gap': AppSpacing.md,
+  };
+
+  static const Map<String, dynamic> addTaskInput = {
+    'flex': 1,
+    'paddingVertical': 10,
+    'paddingHorizontal': 14,
+    'fontSize': AppTypography.sizeMd,
+    'backgroundColor': AppColors.bgSecondary,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
+    'borderRadius': AppSpacing.radiusSm,
+    'color': AppColors.textPrimary,
+  };
+
+  static const Map<String, dynamic> addTaskBtn = {
+    'paddingVertical': 10,
+    'paddingHorizontal': 16,
+    'backgroundColor': AppColors.accentPrimary,
+    'borderRadius': AppSpacing.radiusSm,
+  };
+
+  static const Map<String, dynamic> addTaskBtnText = {
+    'color': AppColors.textPrimary,
+    'fontSize': AppTypography.sizeMd,
+    'fontWeight': AppTypography.weightSemibold,
+  };
+
+  static const Map<String, dynamic> cancelBtn = {
+    'paddingVertical': 10,
+    'paddingHorizontal': 12,
+  };
+
+  static const Map<String, dynamic> cancelBtnText = {
+    'color': AppColors.textSecondary,
+    'fontSize': AppTypography.sizeMd,
   };
 }

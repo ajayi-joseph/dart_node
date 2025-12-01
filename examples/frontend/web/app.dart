@@ -5,6 +5,8 @@ import 'package:dart_node_react/dart_node_react.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
 
+import 'websocket.dart';
+
 const apiUrl = 'http://localhost:3000';
 
 void main() {
@@ -356,6 +358,27 @@ ReactElement _buildTaskManager(
       <JSAny>[].toJS,
     );
 
+    // WebSocket connection for real-time updates
+    useEffect(
+      (() {
+        final ws = connectWebSocket(
+          token: token,
+          onTaskEvent: (event) {
+            final type = (event['type'] as JSString?)?.toDart;
+            final data = event['data'] as JSObject?;
+            switch (data) {
+              case final JSObject d:
+                _handleTaskEvent(type, d, tasksState, setTasks);
+              case null:
+                break;
+            }
+          },
+        );
+        return (() => ws?.close()).toJS;
+      }).toJS,
+      <JSAny>[token.toJS].toJS,
+    );
+
     void addTask() {
       switch (newTask.trim().isEmpty) {
         case true:
@@ -611,4 +634,36 @@ JSString _getInputValue(JSAny event) {
     },
     _ => throw StateError('Event target is not an object'),
   };
+}
+
+/// Handle incoming WebSocket task events
+void _handleTaskEvent(
+  String? type,
+  JSObject task,
+  JSAny? tasksState,
+  JSFunction setTasks,
+) {
+  final tasks = tasksState as JSArray?;
+  final current = (tasks?.toDart ?? []).cast<JSObject>();
+  final taskId = (task['id'] as JSString?)?.toDart;
+
+  switch (type) {
+    case 'task_created':
+      setTasks.callAsFunction(null, [...current, task].toJS);
+    case 'task_updated':
+      final updated = current.map((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return (id == taskId) ? task : t;
+      }).toList();
+      setTasks.callAsFunction(null, updated.toJS);
+    case 'task_deleted':
+      final filtered = current.where((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return id != taskId;
+      }).toList();
+      setTasks.callAsFunction(null, filtered.toJS);
+    default:
+      // Unknown event type, ignore
+      break;
+  }
 }

@@ -8,6 +8,7 @@ import 'package:shared/http/http_client.dart';
 import 'package:shared/theme/theme.dart';
 
 import '../types.dart';
+import '../websocket.dart';
 
 /// Task list screen component
 ReactElement taskListScreen({
@@ -19,18 +20,45 @@ ReactElement taskListScreen({
       final tasksState = useState(<JSAny>[].toJS);
       final loadingState = useState(true.toJS);
       final errorState = useState(null);
+      final showAddFormState = useState(false.toJS);
+      final newTaskTitleState = useState(''.toJS);
 
       final tasks = (tasksState.$1 as JSArray?)?.toDart ?? [];
       final loading = (loadingState.$1 as JSBoolean?)?.toDart ?? true;
       final error = (errorState.$1 as JSString?)?.toDart;
+      final showAddForm = (showAddFormState.$1 as JSBoolean?)?.toDart ?? false;
+      final newTaskTitle = (newTaskTitleState.$1 as JSString?)?.toDart ?? '';
 
       final setTasks = tasksState.$2;
       final setLoading = wrapSetState<bool>(loadingState.$2);
       final setError = wrapSetState<String?>(errorState.$2);
+      final setShowAddForm = wrapSetState<bool>(showAddFormState.$2);
+      final setNewTaskTitle = wrapSetState<String>(newTaskTitleState.$2);
 
       useEffect(
         (() {
           _loadTasks(token, setTasks, setLoading, setError);
+        }).toJS,
+        [token.toJS].toJS,
+      );
+
+      // WebSocket connection for real-time updates
+      useEffect(
+        (() {
+          final ws = connectWebSocket(
+            token: token,
+            onTaskEvent: (event) {
+              final type = (event['type'] as JSString?)?.toDart;
+              final data = event['data'] as JSObject?;
+              switch (data) {
+                case final JSObject d:
+                  _handleTaskEvent(type, d, tasksState.$1, setTasks);
+                case null:
+                  break;
+              }
+            },
+          );
+          return (() => ws?.close()).toJS;
         }).toJS,
         [token.toJS].toJS,
       );
@@ -47,6 +75,16 @@ ReactElement taskListScreen({
 
       void handleDelete(String id) {
         _deleteTask(token, id, setTasks, tasks, setError);
+      }
+
+      void handleAddTask() {
+        final title = newTaskTitle.trim();
+        (title.isEmpty)
+            ? null
+            : _createTask(token, title, setTasks, tasks, setError, () {
+                setNewTaskTitle('');
+                setShowAddForm(false);
+              });
       }
 
       final userName = user?['name'] as JSString?;
@@ -68,11 +106,23 @@ ReactElement taskListScreen({
                       style: {...AppStyles.errorMsg, 'margin': AppSpacing.xl},
                       child: text(error ?? '', style: AppStyles.errorText),
                     )
-                  : _buildTaskList(
-                      tasks,
-                      (onToggle: handleToggle, onDelete: handleDelete),
+                  : _buildTaskContent(
+                      tasks: tasks,
+                      effects: (onToggle: handleToggle, onDelete: handleDelete),
+                      showAddForm: showAddForm,
+                      newTaskTitle: newTaskTitle,
+                      setNewTaskTitle: setNewTaskTitle,
+                      onAddTask: handleAddTask,
+                      onCancelAdd: () => setShowAddForm(false),
                     ),
-        ],
+          showAddForm
+              ? null
+              : touchableOpacity(
+                  onPress: () => setShowAddForm(true),
+                  style: AppStyles.fab,
+                  child: text('+', style: AppStyles.fabText),
+                ),
+        ].whereType<ReactElement>().toList(),
       );
     });
 
@@ -93,24 +143,60 @@ RNViewElement _buildHeader(String userName, void Function() onLogout) => view(
       ],
     );
 
-ReactElement _buildTaskList(List<JSAny?> tasks, TaskEffects effects) =>
-    tasks.isEmpty
-        ? view(
-            style: AppStyles.content,
-            child: view(
-              style: AppStyles.emptyState,
-              children: [
-                text('📝', style: AppStyles.emptyIcon),
-                text('No tasks yet. Add one to get started!',
-                    style: AppStyles.emptyText),
-              ],
-            ),
-          )
-        : scrollView(
-            style: AppStyles.content,
-            children:
-                tasks.map((task) => _buildTaskItem(task, effects)).toList(),
-          );
+ReactElement _buildTaskContent({
+  required List<JSAny?> tasks,
+  required TaskEffects effects,
+  required bool showAddForm,
+  required String newTaskTitle,
+  required void Function(String) setNewTaskTitle,
+  required void Function() onAddTask,
+  required void Function() onCancelAdd,
+}) =>
+    scrollView(
+      style: AppStyles.content,
+      children: [
+        showAddForm ? _buildAddTaskForm(newTaskTitle, setNewTaskTitle, onAddTask, onCancelAdd) : null,
+        ...tasks.isEmpty
+            ? [_buildEmptyState()]
+            : tasks.map((task) => _buildTaskItem(task, effects)),
+      ].whereType<ReactElement>().toList(),
+    );
+
+RNViewElement _buildAddTaskForm(
+  String value,
+  void Function(String) onChangeText,
+  void Function() onSubmit,
+  void Function() onCancel,
+) =>
+    view(
+      style: AppStyles.addTaskInline,
+      children: [
+        textInput(
+          value: value,
+          placeholder: 'What needs to be done?',
+          onChangeText: onChangeText,
+          style: AppStyles.addTaskInput,
+          props: {'placeholderTextColor': AppColors.textMuted, 'autoFocus': true},
+        ),
+        touchableOpacity(
+          onPress: onSubmit,
+          style: AppStyles.addTaskBtn,
+          child: text('Add', style: AppStyles.addTaskBtnText),
+        ),
+        touchableOpacity(
+          onPress: onCancel,
+          style: AppStyles.cancelBtn,
+          child: text('Cancel', style: AppStyles.cancelBtnText),
+        ),
+      ],
+    );
+
+RNViewElement _buildEmptyState() => view(
+      style: AppStyles.emptyState,
+      children: [
+        text('No tasks yet', style: AppStyles.emptyText),
+      ],
+    );
 
 RNViewElement _buildTaskItem(JSAny? task, TaskEffects effects) {
   final taskObj = task as JSObject?;
@@ -236,4 +322,65 @@ void _deleteTask(
   }).catchError((Object e) {
     setError(e.toString());
   });
+}
+
+void _createTask(
+  String token,
+  String title,
+  JSFunction setTasks,
+  List<JSAny?> tasks,
+  SetError setError,
+  void Function() onSuccess,
+) {
+  fetchJson(
+    '$apiUrl/tasks',
+    method: 'POST',
+    token: token,
+    body: {'title': title},
+  ).then((result) {
+    result.match(
+      onSuccess: (data) {
+        final task = data as JSObject?;
+        (task != null)
+            ? setTasks.callAsFunction(null, [...tasks, task].toJS)
+            : null;
+        setError(null);
+        onSuccess();
+      },
+      onError: (message) => setError(message),
+    );
+  }).catchError((Object e) {
+    setError(e.toString());
+  });
+}
+
+/// Handle incoming WebSocket task events
+void _handleTaskEvent(
+  String? type,
+  JSObject task,
+  JSAny? tasksState,
+  JSFunction setTasks,
+) {
+  final tasks = tasksState as JSArray?;
+  final current = (tasks?.toDart ?? []).cast<JSObject>();
+  final taskId = (task['id'] as JSString?)?.toDart;
+
+  switch (type) {
+    case 'task_created':
+      setTasks.callAsFunction(null, [...current, task].toJS);
+    case 'task_updated':
+      final updated = current.map((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return (id == taskId) ? task : t;
+      }).toList();
+      setTasks.callAsFunction(null, updated.toJS);
+    case 'task_deleted':
+      final filtered = current.where((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return id != taskId;
+      }).toList();
+      setTasks.callAsFunction(null, filtered.toJS);
+    default:
+      break;
+  }
 }

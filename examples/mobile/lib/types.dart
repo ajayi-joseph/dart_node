@@ -5,6 +5,13 @@ import 'dart:js_interop_unsafe';
 String get apiUrl =>
     (globalContext['__API_URL__'] as JSString?)?.toDart ?? 'http://localhost:3000';
 
+/// WebSocket URL - derives from API URL (port 3001)
+String get wsUrl {
+  final api = apiUrl;
+  final uri = Uri.parse(api);
+  return 'ws://${uri.host}:3001';
+}
+
 /// Auth state - immutable record
 typedef AuthState = ({JSString? token, JSObject? user, String view});
 

@@ -5,6 +5,7 @@ import 'package:backend/schemas.dart';
 import 'package:backend/services/task_service.dart';
 import 'package:backend/services/token_service.dart';
 import 'package:backend/services/user_service.dart';
+import 'package:backend/services/websocket_service.dart';
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_express/dart_node_express.dart';
 import 'package:shared/models/task.dart';
@@ -14,6 +15,7 @@ void main() {
   final tokenService = TokenService('super-secret-jwt-key-change-in-prod');
   final userService = UserService();
   final taskService = TaskService();
+  final wsService = WebSocketService(tokenService)..start(port: 3001);
 
   express()
     ..use(cors())
@@ -91,6 +93,7 @@ void main() {
           title: data.title,
           description: data.description,
         );
+        wsService.notifyTaskChange(auth.user.id, TaskEventType.created, task);
         res
           ..status(201)
           ..jsonMap({'success': true, 'data': task.toJson()});
@@ -131,7 +134,12 @@ void main() {
               description: data.description,
               completed: data.completed,
             );
-            res.jsonMap({'success': true, 'data': updated!.toJson()});
+            wsService.notifyTaskChange(
+              auth.user.id,
+              TaskEventType.updated,
+              updated!,
+            );
+            res.jsonMap({'success': true, 'data': updated.toJson()});
         }
       }),
     ])
@@ -146,8 +154,9 @@ void main() {
             throw const NotFoundError('Task');
           case Task(:final userId) when userId != auth.user.id:
             throw const ForbiddenError('Cannot delete this task');
-          case Task():
+          case final Task t:
             taskService.delete(taskId);
+            wsService.notifyTaskChange(auth.user.id, TaskEventType.deleted, t);
             res.jsonMap({'success': true, 'message': 'Task deleted'});
         }
       }),
