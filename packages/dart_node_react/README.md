@@ -9,12 +9,13 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 ```mermaid
 graph TD
     B[dart_node_express] --> A[dart_node_core]
-    C[dart_node_node] --> A
+    C[dart_node_ws] --> A
     D[dart_node_react] --> A
     E[dart_node_react_native] --> D
     B -.-> F[express npm]
-    D -.-> G[react npm]
-    E -.-> H[react-native npm]
+    C -.-> G[ws npm]
+    D -.-> H[react npm]
+    E -.-> I[react-native npm]
 ```
 
 Part of the [dart_node](https://github.com/MelbourneDeveloper/dart_node) package family.

@@ -27,14 +27,20 @@
       "preLaunchTask": "build-frontend"
     },
     {
-      "name": "Mobile: Build & Run (Expo)",
-      "type": "node",
+      "name": "Mobile: iOS",
+      "type": "node-terminal",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "ios"],
+      "command": "npm run ios",
       "cwd": "${workspaceFolder}/examples/mobile/rn",
-      "preLaunchTask": "build-mobile",
-      "console": "integratedTerminal"
+      "preLaunchTask": "build-mobile"
+    },
+    {
+      "name": "Mobile: Android",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run android",
+      "cwd": "${workspaceFolder}/examples/mobile/rn",
+      "preLaunchTask": "build-mobile"
     },
     {
       "name": "Mobile: Build Only",

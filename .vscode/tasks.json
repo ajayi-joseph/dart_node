@@ -26,8 +26,7 @@
     {
       "label": "build-mobile",
       "type": "shell",
-      "command": "dart",
-      "args": ["run", "tools/build/build.dart", "mobile"],
+      "command": "mkdir -p examples/mobile/build && dart run tools/build/build.dart mobile && cd examples/mobile/rn && npm install",
       "options": {
         "cwd": "${workspaceFolder}",
         "env": {

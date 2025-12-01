@@ -53,7 +53,22 @@ ReactElement _buildCurrentView({
       _ => loginScreen(authEffects: authEffects),
     };
 
+@JS('console.log')
+external void _consoleLog(JSAny? message);
+
+@JS('console.error')
+external void _consoleError(JSAny? message);
+
 /// Register the app with React Native
 void registerMobileApp() {
-  registerApp('main', app());
+  _consoleLog('=== registerMobileApp() STARTING ==='.toJS);
+  try {
+    final appComponent = app();
+    _consoleLog('=== app() created ==='.toJS);
+    registerApp('main', appComponent);
+    _consoleLog('=== registerApp() completed ==='.toJS);
+  } catch (e) {
+    _consoleError('=== ERROR in registerMobileApp ==='.toJS);
+    _consoleError(e.toString().toJS);
+  }
 }

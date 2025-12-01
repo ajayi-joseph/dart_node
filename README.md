@@ -7,12 +7,13 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 ```mermaid
 graph TD
     B[dart_node_express] --> A[dart_node_core]
-    C[dart_node_node] --> A
+    C[dart_node_ws] --> A
     D[dart_node_react] --> A
     E[dart_node_react_native] --> D
     B -.-> F[express npm]
-    D -.-> G[react npm]
-    E -.-> H[react-native npm]
+    C -.-> G[ws npm]
+    D -.-> H[react npm]
+    E -.-> I[react-native npm]
 ```
 
 ## Packages
@@ -21,7 +22,7 @@ graph TD
 |---------|-------------|---------|
 | [dart_node_core](packages/dart_node_core) | Core JS interop utilities | 0.1.0-beta |
 | [dart_node_express](packages/dart_node_express) | Express.js bindings | 0.1.0-beta |
-| [dart_node_node](packages/dart_node_node) | Node.js API bindings | 0.1.0-beta |
+| [dart_node_ws](packages/dart_node_ws) | WebSocket bindings | 0.1.0-beta |
 | [dart_node_react](packages/dart_node_react) | React bindings | 0.1.0-beta |
 | [dart_node_react_native](packages/dart_node_react_native) | React Native bindings | 0.1.0-beta |
 

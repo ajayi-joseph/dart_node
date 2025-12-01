@@ -6,9 +6,9 @@
     "prestart": "npx kill-port --port 8083 || true",
     "preandroid": "npx kill-port --port 8083 || true",
     "preios": "npx kill-port --port 8083 || true",
-    "start": "expo start --port 8083",
-    "android": "expo start --android --port 8083",
-    "ios": "expo start --ios --port 8083",
+    "start": "./node_modules/.bin/expo start --port 8083",
+    "android": "./node_modules/.bin/expo start --android --port 8083",
+    "ios": "./node_modules/.bin/expo start --ios --port 8083",
     "build:dart": "cd .. && dart run ../../tools/build/build.dart mobile"
   },
   "dependencies": {

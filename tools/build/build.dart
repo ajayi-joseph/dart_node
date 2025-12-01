@@ -71,7 +71,59 @@ void main(List<String> args) {
                   isSuccess: false,
                   message: 'pub get failed for ${pkg.path}:\n${result.stderr}',
                 )
-              : _pubGetPackages(remaining);
+              : _npmInstallIfNeeded(pkg, remaining);
+        }();
+}
+
+({bool isSuccess, String message}) _npmInstallIfNeeded(
+  Directory pkg,
+  List<Directory> remaining,
+) {
+  final npmDirs = _findNpmDirs(pkg);
+  return _npmInstallDirs(npmDirs, remaining);
+}
+
+List<Directory> _findNpmDirs(Directory pkg) {
+  final packageJson = File('${pkg.path}/package.json');
+  final rnDir = Directory('${pkg.path}/rn');
+  final rnPackageJson = File('${rnDir.path}/package.json');
+
+  return [
+    packageJson.existsSync() ? pkg : null,
+    rnPackageJson.existsSync() ? rnDir : null,
+  ].whereType<Directory>().toList();
+}
+
+({bool isSuccess, String message}) _npmInstallDirs(
+  List<Directory> npmDirs,
+  List<Directory> remainingPackages,
+) {
+  return npmDirs.isEmpty
+      ? _pubGetPackages(remainingPackages)
+      : _npmInstallDir(npmDirs.first, npmDirs.sublist(1), remainingPackages);
+}
+
+({bool isSuccess, String message}) _npmInstallDir(
+  Directory dir,
+  List<Directory> remainingNpm,
+  List<Directory> remainingPackages,
+) {
+  final hasNodeModules = Directory('${dir.path}/node_modules').existsSync();
+  return hasNodeModules
+      ? _npmInstallDirs(remainingNpm, remainingPackages)
+      : () {
+          print('    npm install ${dir.path.split('/').last}...');
+          final result = Process.runSync(
+            'npm',
+            ['install'],
+            workingDirectory: dir.path,
+          );
+          return result.exitCode != 0
+              ? (
+                  isSuccess: false,
+                  message: 'npm install failed for ${dir.path}:\n${result.stderr}',
+                )
+              : _npmInstallDirs(remainingNpm, remainingPackages);
         }();
 }
 
@@ -131,7 +183,11 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   String target,
   String buildDir,
 ) {
-  final outputName = target == 'backend' ? 'server.js' : '$target.js';
+  final outputName = switch (target) {
+    'backend' => 'server.js',
+    'mobile' => 'app.js',
+    _ => '$target.js',
+  };
   final tempOutput = '$buildDir/temp_$outputName';
   final finalOutput = '$buildDir/$outputName';
   final entryFileName = entryPoint.split('/').last;
@@ -148,7 +204,30 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
           isSuccess: false,
           message: 'Compilation failed:\n${compileResult.stdout}\n${compileResult.stderr}',
         )
+      : _finalizeBuild(tempOutput, finalOutput, target);
+}
+
+({bool isSuccess, String message}) _finalizeBuild(
+  String tempOutput,
+  String finalOutput,
+  String target,
+) {
+  // Mobile (React Native) uses Hermes, not Node.js - skip preamble
+  return target == 'mobile'
+      ? _copyWithoutPreamble(tempOutput, finalOutput)
       : _prependPreamble(tempOutput, finalOutput);
+}
+
+({bool isSuccess, String message}) _copyWithoutPreamble(
+  String tempOutput,
+  String finalOutput,
+) {
+  print('  Finalizing for React Native (no preamble)...');
+  final compiledJs = File(tempOutput).readAsStringSync();
+  File(finalOutput).writeAsStringSync(compiledJs);
+  File(tempOutput).deleteSync();
+  print('  Build complete: $finalOutput');
+  return (isSuccess: true, message: 'Build successful');
 }
 
 ({bool isSuccess, String message}) _prependPreamble(
