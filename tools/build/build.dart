@@ -212,22 +212,8 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   String finalOutput,
   String target,
 ) {
-  // Mobile (React Native) uses Hermes, not Node.js - skip preamble
-  return target == 'mobile'
-      ? _copyWithoutPreamble(tempOutput, finalOutput)
-      : _prependPreamble(tempOutput, finalOutput);
-}
-
-({bool isSuccess, String message}) _copyWithoutPreamble(
-  String tempOutput,
-  String finalOutput,
-) {
-  print('  Finalizing for React Native (no preamble)...');
-  final compiledJs = File(tempOutput).readAsStringSync();
-  File(finalOutput).writeAsStringSync(compiledJs);
-  File(tempOutput).deleteSync();
-  print('  Build complete: $finalOutput');
-  return (isSuccess: true, message: 'Build successful');
+  // All targets need preamble - dart2js requires self.* globals
+  return _prependPreamble(tempOutput, finalOutput);
 }
 
 ({bool isSuccess, String message}) _prependPreamble(
