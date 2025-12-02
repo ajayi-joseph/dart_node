@@ -2,6 +2,10 @@
 
 Write your entire stack in Dart: React web apps, React Native mobile apps with Expo, and Node.js Express backends.
 
+📚 **[Documentation & Website](https://melbournedeveloper.github.io/dart_node/)**
+
+![React and React Native](images/dart_node.gif)
+
 ## Package Architecture
 
 ```mermaid
@@ -18,13 +22,13 @@ graph TD
 
 ## Packages
 
-| Package | Description | Version |
-|---------|-------------|---------|
-| [dart_node_core](packages/dart_node_core) | Core JS interop utilities | 0.1.0-beta |
-| [dart_node_express](packages/dart_node_express) | Express.js bindings | 0.1.0-beta |
-| [dart_node_ws](packages/dart_node_ws) | WebSocket bindings | 0.1.0-beta |
-| [dart_node_react](packages/dart_node_react) | React bindings | 0.1.0-beta |
-| [dart_node_react_native](packages/dart_node_react_native) | React Native bindings | 0.1.0-beta |
+| Package | Description | 
+|---------|-------------|
+| [dart_node_core](packages/dart_node_core) | Core JS interop utilities 
+| [dart_node_express](packages/dart_node_express) | Express.js bindings 
+| [dart_node_ws](packages/dart_node_ws) | WebSocket bindings 
+| [dart_node_react](packages/dart_node_react) | React bindings 
+| [dart_node_react_native](packages/dart_node_react_native) | React Native bindings |
 
 ## Example Quick Start
 
