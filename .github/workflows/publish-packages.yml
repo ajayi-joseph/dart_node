@@ -53,11 +53,12 @@ jobs:
         run: |
           echo "Waiting for dart_node_core $VERSION to be available on pub.dev..."
           for i in {1..60}; do
-            if curl -s "https://pub.dev/api/packages/dart_node_core/versions/$VERSION" | grep -q '"version"'; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_core/versions/$VERSION")
+            if [ "$HTTP_CODE" = "200" ]; then
               echo "dart_node_core $VERSION is now available!"
               exit 0
             fi
-            echo "Attempt $i/60: Not yet available, waiting 10 seconds..."
+            echo "Attempt $i/60: Not yet available (HTTP $HTTP_CODE), waiting 10 seconds..."
             sleep 10
           done
           echo "Timeout waiting for dart_node_core to be available"
@@ -87,11 +88,12 @@ jobs:
         run: |
           echo "Waiting for dart_node_react $VERSION to be available on pub.dev..."
           for i in {1..60}; do
-            if curl -s "https://pub.dev/api/packages/dart_node_react/versions/$VERSION" | grep -q '"version"'; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_react/versions/$VERSION")
+            if [ "$HTTP_CODE" = "200" ]; then
               echo "dart_node_react $VERSION is now available!"
               exit 0
             fi
-            echo "Attempt $i/60: Not yet available, waiting 10 seconds..."
+            echo "Attempt $i/60: Not yet available (HTTP $HTTP_CODE), waiting 10 seconds..."
             sleep 10
           done
           echo "Timeout waiting for dart_node_react to be available"
