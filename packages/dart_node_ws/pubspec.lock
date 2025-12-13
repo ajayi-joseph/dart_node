@@ -102,13 +102,6 @@ packages:
       path: "../dart_node_coverage"
       relative: true
     source: path
-    version: "0.1.0"
-  dart_node_express:
-    dependency: "direct main"
-    description:
-      path: "../dart_node_express"
-      relative: true
-    source: path
     version: "0.9.0-beta"
   file:
     dependency: transitive

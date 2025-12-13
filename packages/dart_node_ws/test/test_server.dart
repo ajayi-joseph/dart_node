@@ -1,23 +1,17 @@
-/// Test server for WebSocket and Express integration tests.
+/// Test server for WebSocket tests (no Express dependency).
 library;
 
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_core/dart_node_core.dart';
-import 'package:dart_node_express/dart_node_express.dart';
 import 'package:dart_node_ws/dart_node_ws.dart';
-import 'package:nadz/nadz.dart';
-
-/// Port for HTTP server
-const httpPort = 3456;
 
 /// Port for WebSocket server
 const wsPort = 3457;
 
 void main() {
-  final wsServer = _startWebSocketServer();
-  _startHttpServer(wsServer);
+  _startWebSocketServer();
 }
 
 WebSocketServer _startWebSocketServer() {
@@ -110,89 +104,3 @@ Map<String, Object?>? _parseJson(String jsonStr) {
     _ => null,
   };
 }
-
-/// JSON body parser middleware
-JSFunction _jsonParser() {
-  final expressModule = switch (requireModule('express')) {
-    final JSObject o => o,
-    _ => throw StateError('Express module not found'),
-  };
-  final jsonFn = switch (expressModule['json']) {
-    final JSFunction f => f,
-    _ => throw StateError('Express json function not found'),
-  };
-  return switch (jsonFn.callAsFunction()) {
-    final JSFunction f => f,
-    _ => throw StateError('Failed to create JSON parser'),
-  };
-}
-
-void _startHttpServer(WebSocketServer wsServer) {
-  express()
-    ..use(_jsonParser())
-    ..get(
-      '/health',
-      handler((req, res) {
-        res.jsonMap({'status': 'ok', 'wsPort': wsPort});
-      }),
-    )
-    ..get(
-      '/echo/:message',
-      handler((req, res) {
-        final message = req.params['message'].toString();
-        res.jsonMap({'echo': message});
-      }),
-    )
-    ..post(
-      '/json',
-      handler((req, res) {
-        final body = req.body;
-        res.jsonMap({'received': body.dartify(), 'success': true});
-      }),
-    )
-    ..get(
-      '/error',
-      asyncHandler((req, res) async {
-        await Future<void>.value();
-        throw const NotFoundError('Test error');
-      }),
-    )
-    ..get(
-      '/status/:code',
-      handler((req, res) {
-        final code = int.tryParse(req.params['code'].toString()) ?? 200;
-        res
-          ..status(code)
-          ..jsonMap({'statusCode': code});
-      }),
-    )
-    ..postWithMiddleware('/validated', [
-      validateBody(_testSchema),
-      handler((req, res) {
-        switch (getValidatedBody<TestUserData>(req)) {
-          case Error(:final error):
-            res
-              ..status(400)
-              ..jsonMap({'error': error});
-          case Success(:final value):
-            res.jsonMap({'name': value.name, 'age': value.age});
-        }
-      }),
-    ])
-    ..use(errorHandler())
-    ..listen(
-      httpPort,
-      (() {
-        consoleLog('HTTP server running on http://localhost:$httpPort');
-      }).toJS,
-    );
-}
-
-/// Test user data type
-typedef TestUserData = ({String name, int age});
-
-/// Test validation schema
-final _testSchema = schema<TestUserData>({
-  'name': string().minLength(1).maxLength(100),
-  'age': int_().min(0).max(150),
-}, (map) => (name: map['name']! as String, age: map['age']! as int));
