@@ -9,7 +9,7 @@ Multi-agent coordination MCP server - enables multiple AI agents to safely edit 
 - **Messaging**: Inter-agent communication with broadcast support
 - **Plan Visibility**: Share goals and current tasks across agents
 - **Real-time Status**: System overview of all agents, locks, and plans
-- **Written in Dart**: Made with [dart_node](https://dartnode.org)
+- **Written in Dart**: Made with [dart_node](https://dartnode.dev)
 
 ## Installation
 
@@ -36,6 +36,18 @@ Or configure manually in your MCP settings:
     }
   }
 }
+```
+
+## Example Rules
+
+```markdown
+## Multi-Agent Coordination (Too Many Cooks)
+- Keep your key! It's critical. Do not lose it!
+- Check messages regularly, lock files before editing, unlock after
+- Don't edit locked files; signal intent via plans and messages
+- Coordinator: keep delegating via messages. Worker: keep asking for tasks via messages
+- Clean up expired locks routinely
+- Do not use Git unless asked by user
 ```
 
 ## MCP Tools
